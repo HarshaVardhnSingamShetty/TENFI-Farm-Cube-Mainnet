@@ -1,0 +1,173 @@
+1. Deploy Auto Token contract
+2. Mint Auto Tokens to our account addresses.(As later, the ownership will be trasnferred to Farm contract)
+3. Update the Auto adddress variable in AutoFarm contract
+4. Deploy AutoFarm contract
+5. Transfer Ownership of Autotoken to AutoFarm
+6. Deploy Timelock controller contract with appropriate Constructor Arguments
+7. Transfer Ownership of AutoFarm to Timelock controller
+8. Deploy StratX2PCS
+The Ownership of StratX2PCS is transferred to the AutoFarm automatically within the Constructor 
+(we need not change it again!)
+
+-> MOST IMP :- To create any pool, we need the Paths to be present in Capricorn swap.
+-> To know the Route, we can use CapSwap and in swap functionality provide the tokens we want to know the path.
+We can find the path in the Route feild.
+
+Methods in AutoFarmV2.sol Contract:
+
+1. Signature: function add(uint256 _allocPoint,IERC20 _want,bool _withUpdate,address _strat) public onlyOwner;
+    This function is to add a new pool to the AutoFarm.
+    It can only be called by the Owner which is the Timelock contract.
+    If the isUpdate bool is true, massUpdatepools() is executed.
+    The new pool's alloc points are added to total Allocation points.
+    And the new Pool is added into the PoolInfo array.
+
+2. Signature: function set( uint256 _pid, uint256 _allocPoint, bool _withUpdate) public onlyOwner;
+    This function is to set the alloc points of an already existing pool.
+    It can only be called by the Owner which is the Timelock contract.
+    It updates the existing pool's allocation points to the _allocPoint.
+
+3. Signature: function getMultiplier(uint256 _from, uint256 _to)  public view returns(uint256);
+    This function returns the difference of _from and _to
+    If circulating supply of Auto Token is > AUTOMaxSupply, then this function returns 0    
+
+4. Signature: function pendingAUTO(uint256 _pid, address _user) external view returns(uint256);
+    This function is to see pending AUTO on frontend.
+    calculate the,
+    AUTOReward = multiplier.mul(AUTOPerBlock).mul(pool.allocPoint).div(totalAllocPoint)
+    The finally it returns the pendingAuto by => user.shares.mul(accAUTOPerShare).div(1e12).sub(user.rewardDebt);
+    The rewardDebt is the Auto that has been already dispersed to the user, and hence we are subracting it.
+
+5. Signature: function updatePool(uint256 _pid) public;
+    This function is to mint Auto rewards of a pool to Farm Contract if the block number > lastRewardBlock number.
+    After minting the Auto Rewards to the contract, the lastRewardBlock is updated to the current block number.
+
+6. Signature: function deposit(uint256 _pid, uint256 _wantAmt) public nonReentrant ;
+    This function is to take deposits into the pool _pid.
+    First the updatePool method is called.And then,
+    If( user.shares of sender ) > 0: then any Pending Auto Rewards the sender has got until this block number will be trasnferred to the user.
+
+    If (_wantAmt>0): then, first the want tokens are trasnferred to the Farm contract from sender. And then The safeIncreaseAllowance(pool.strat, _wantAmt); is called so that the want Tokens can be used by the Strat Contract.
+
+    Finally, the user.shares are calculated based on the _wantAmt and the sender gets the shares proportinal to the Total Locked value of want token, to the _wantAmt
+
+    rewardDebt variable is updated as the Pending Auto have been trasnferred to the sender.
+
+7. Signature: function withdraw(uint256 _pid, uint256 _wantAmt) public nonReentrant;
+    This function lets user to withdraw back the funds.
+    First the updatePool method is called.And then,
+    Any Pending Auto rewards are trasnferred to the sender.
+    And the sharesRemoved is calculated based on, the _wantAmt in proportion with the wantLockedTotal of the pool.
+    
+    The sharesRemoved is subracted from the existing shares of the sender.
+    After performing basic checks, to find if user has the required LP deposited in the pool
+    Finally, the LP tokens are trasnferred back to the sender.
+
+8. Signature: function emergencyWithdraw(uint256 _pid) public nonReentrant;
+    
+    This function is for emergencyWithdrawal of funds, the purpose is to completely withdraw funds in case of an emergency, without thinking about the Auto Rewards.
+
+    The amount to be withdrawn is  calculated based on user shares in proportion with the total Locked want tokens.
+    And the wantAmount is trasnferred back to the sender.
+    The user.shares and rewardDebt are updated to 0.
+
+9. Signature: function inCaseTokensGetStuck(address _token, uint256 _amount) public onlyOwner;
+    This function can only be called by the owner
+    It transfers the _token back to the owner, it is used when tokens get stuck in tx.
+
+10. Signature: function migrateToAUTOv2(uint256 _inputAmt) public;
+      This function is to migrate AUTOv1 tokens to V2.
+      The sender's _inputAmt are burned and then same amount of AUTOv2 tokens are minted back to the sender only if block.number < 5033333, which is when the v2 has been Deployed.
+
+
+Methods in StratX2.sol Contract:
+
+1. Signature: function deposit(address _userAddress, uint256 _wantAmt) onlyOwner nonReentrant whenNotPaused
+              returns (uint256)
+    
+    This function can only be called by the owner which is the AutoFarm Contract, which is assigned during the deployment of the Strategy.
+
+    When AutoFarm contract calls this function, first it transfers the want tokens from the farm to this strategy contract.
+    It then, calculates the shares added based on the proportion of deposited amt to wantLockedTotal multiplied by SharesTotal.
+
+    If AutoCompounding is true, then the _farm() function is executed. Else, the wantLockedTotal is incremented with the _wantAmt deposited.
+
+    Finally, the sharesAdded is returned back to the AutoFarm Contract.
+
+2. Signature:  function _farm() internal virtual;
+      
+    This is an internal function can be called only when AutoCompounding is true.
+    First, wantLockedTotal is updated as, it was not updated in deposit function when the AutoCompounding is true.
+    Then, the entire _wantAmt in the Strat contract is trasnferred to the MasterChef contract calling either deposit() function of MasterChef or enterStaking() function depending upon the _want token.
+
+3. Signature: function _unfarm(uint256 _wantAmt) internal virtual;
+    This is an internal function.
+    This function calls removeStaking function of the MasterChef if the _want token is the Earned token.
+    Else, withdraw() function of MasterChef is called.
+
+4. Signature: function withdraw(address _userAddress, uint256 _wantAmt);
+    This function can only be called by the owner which is the AutoFarm Contract, which is assigned during the deployment of the Strategy.
+    It calculates the sharesRemoved based on the proportion of withdrawal amt to wantLockedTotal multiplied by SharesTotal.
+
+    If AutoCompounding was True, then _unfarm() function is called.
+    And if withdrawal amount is > the wantAmount present in the contract, then the withdrawal is adjusted to the wantAmount present in the contract.
+
+    wantLockedTotal is decremented with the withdrawal amount.
+    And Finally (following the CEI pattern), the withdrawal amount is transferred back to the AutoFarm contract. 
+    The sharesRemoved is returned back to the AutoFarm contract.
+
+5 Signature: function earn() public virtual nonReentrant whenNotPaused;
+    This function can onlybe called when AutoCompounding is true.
+
+    First, it Harvests farm tokens by calling _unfarm(0).
+    Now, calculates the earnedAmount from MasterChef to Strat Contract.
+    Next earnedAmount is updated after distributing Fee and calling buyBack().
+
+    Now, on the updated earnedAmount, 50% of it is swapped with the Token0 of the LP Token and other 50% is swapped with the Token1 of LP token, only while checking any of these tokens are not equal to the earned Token!
+
+    And now, using the token0 and token1 we add Liquidity again in uniRouterAddress to get the more of LPtokens.
+
+    And finally, as we have more LP tokens the _farm() function is called, to deposit these LP tokens into the MasterChef contract.
+
+6. Signature: function buyBack(uint256 _earnedAmt) internal virtual returns (uint256);
+    This is an internal function used to calculate the buyBack amount of the total earnedAmount.
+    It is calculated as 
+        buyBackAmt = _earnedAmt.mul(buyBackRate).div(buyBackRateMax);
+    
+    So a proportion of earnedAmount amt is given as buyBackAmt based on the buyBackRate.
+    Now, the buyBackAmt of earnedToken is swapped to AUTO token and transferred to the buyBack address.
+    Finally, _earnedAmt.sub(buyBackAmt); is returned
+
+7. Signature: function distributeFees(uint256 _earnedAmt);
+    This function is to give a part of earnedAmount as the Fee to the rewardsAddress.
+    The fee is calculated based on the controllerFee and controllerFeeMax values.
+    And the fee amount is transferred to the rewardsAddress.
+
+    Finally, _earnedAmt.sub(fee); is returned.
+
+8. Signature: function convertDustToEarned() public virtual whenNotPaused ;
+    This function is to convert dust of token0, token1 formed while swapping to earnedAmount.
+    First, calculates the amount of token0 present in the contract
+    And then if amount0 > 0, then that amount0 is swapped to earned Token.
+    Similarly, any token1 dust present is also swapped to earned Token.
+
+9. Signature: function _safeSwap( adddress _uniRouterAddress, uint256 _amountIn, uint256 _slippageFactor,   
+                                address[] memory _path, address _to, uint256 _deadline);
+    This function is to use the _uniRouterAddress and perform swap between tokens.
+    It uses the swapExactTokensForTokensSupportingFeeOnTransferTokens() function of _uniRouterAddress.                     
+        
+
+
+
+
+
+
+
+
+
+
+
+    
+                
+    
+

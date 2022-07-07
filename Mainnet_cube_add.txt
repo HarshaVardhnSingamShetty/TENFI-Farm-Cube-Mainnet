@@ -1,0 +1,82 @@
+MasterChef (CapSwap) :: 0x441e22e8cc8c3cfa14086a78ed130e1841307860
+CapswapV2Router02 (Router):: 0x34c385dd9015d663830a37CD2E75818fda6C605f
+CapswapV2Factory (Factory) :: 0x33cb4150f3adfcd92fbfa3309823a2a242bf280f
+Rewards Address :: ??
+
+------------------------------------------------------------------------
+Token addresses on Cube network.
+
+// Found these token adddresses by searching token name in cubescan!
+WCUBE :: 0x9d3f61338d6eb394e378d28c1fd17d5909ac6591
+CORN :: 0x6f8a58be5497c82e129b31e1d9b7604ed9b59451
+USDT :: 0x79f1520268a20c879ef44d169a4e3812d223c6de
+ETH :: 0x57eea49ec1087695274a9c4f341e414eb64328c2
+BTC :: 0x040ea5c10e6ba4badb6c433a365ccc4968697230
+HUSD :: 0x9db853f46dd7d541d0fba1c8b6b7e7b1d8ff58d3  
+USDC :: 0x00f0d8595797943c12605cd59bc0d9f63d750ccf
+HT :: 0xfe99ea1f1fd9c121efb602bd4f098f9090c52909
+
+------------------------------------------------------------------------
+LP token/contract address for the Pairs.
+
+// Found these using the getPair() of the Factory contract
+CORN-WCUBE :: 0x20e66bc8f35aa9573cc5c308f10dbead9e617a69
+CORN-USDT :: 0x149f1226d7b052ff1bec193826959571effa383b
+USDT-HUSD :: 0x039990f51e2c5db951a88c7f50cb7d84fdccb319
+USDT-WCUBE :: 0x5d3ad1fe9beee77167033df7e9f43020f1071e41
+BTC-ETH :: 0xc17409aba74dc8a90d66700b1b840a2f3ac6bcce
+BTC-USDT :: 0x5c14c2a112cdc864502d5717b344f32c6e59eda7
+USDT-HT :: 0x547515278491d97cc2e65701d7680e5f39bfe8e7
+USDC-USDT :: 0x42d0efc74a084fe0cc5e82c6f22667db72ed823f
+ETH-USDT :: 0x9148176be900a56bdcb4ab38ab6788b80bec8d1b
+
+------------------------------------------------------------------------
+
+MasterChef pool Id's for LP Tokens
+
+// Found using the MasterChef contract poolInfo()
+CORN    :: 0x6F8A58be5497c82E129B31E1d9B7604ED9b59451  :: pid 0   //single token pool
+BTC-USDT :: 0x5c14c2a112cdc864502d5717b344f32c6e59eda7 :: pid 1
+ETH-USDT :: 0x9148176be900a56bdcb4ab38ab6788b80bec8d1b :: pid 2
+USDC-USDT :: 0x42d0efc74a084fe0cc5e82c6f22667db72ed823f :: pid 3
+CORN-USDT :: 0x149f1226d7b052ff1bec193826959571effa383b :: pid 4
+CORN-WCUBE :: 0x20e66bc8f35aa9573cc5c308f10dbead9e617a69 :: pid 5
+USDT-WCUBE :: 0x5d3ad1fe9beee77167033df7e9f43020f1071e41 :: pid 6
+BTC-ETH :: 0xc17409aba74dc8a90d66700b1b840a2f3ac6bcce :: pid 7
+USDT-HT :: 0x547515278491d97cc2e65701d7680e5f39bfe8e7 :: pid 8
+WCUBE   :: 0x9D3F61338d6Eb394e378D28C1Fd17d5909aC6591 :: pid 9    //single token pool
+USDT-HUSD :: 0x039990f51e2c5db951a88c7f50cb7d84fdccb319 :: pid 10
+
+------------------------------------------------------------------------
+Routes between pairs on Capricorn swap.
+
+// Found using the Capswap Swap UI, we get route before swapping!
+Routes :-
+CORN->WCUBE 
+WCUBE->CORN
+
+CORN->WCUBE->USDT
+USDT->WCUBE->CORN
+
+USDT->HUSD
+HUSD->USDT
+
+USDT->WCUBE
+WCUBE->USDT
+
+BTC->ETH
+ETH-BTC
+
+BTC->USDT
+USDT->BTC
+
+USDT->HT
+HT->USDT
+
+USDC->USDT
+USDT->USDC
+
+ETH->USDT
+USDT->ETH
+
+------------------------------------------------------------------------

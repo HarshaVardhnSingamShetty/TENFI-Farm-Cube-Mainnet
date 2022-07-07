@@ -1,0 +1,17 @@
+1. Deploy Auto Token contract
+2. Mint Auto Tokens to our account addresses.(As later, the ownership will be trasnferred to Farm contract)
+3. Update the Auto adddress variable in AutoFarm contract
+4. Deploy AutoFarm contract
+5. Transfer Ownership of Autotoken to AutoFarm
+6. Deploy Timelock controller contract with Constructor Arguments (i.e setting the DevWallet address)
+7. Transfer Ownership of AutoFarm to Timelock controller
+8. Add Liquidity of Earned-AutoToken in CapSwap
+9. Deploy StratX2PCS (here, pid refers to the pool id in MasterChef!)
+The Ownership of StratX2PCS is trasnferred to the AutoFarm automatically within the Constructor 
+(we need not change it again!)
+
+
+-> Add Liquidity of Earned token into Capricorn Swap
+-> Create pool for Earned Token (Corn Token/Cake)
+
+-> MOST IMP :- To create any pool, we need the Paths in Capricorn swap.
